@@ -24,3 +24,9 @@ repos:
         entry: shellcheck
         language: system
         types: [shell]
+      - id: check-manifests
+        name: check manifests
+        entry: scripts/check-manifests.sh
+        language: system
+        pass_filenames: false
+        files: \.(ya?ml|tpl)$
