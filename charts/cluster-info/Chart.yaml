@@ -1,0 +1,4 @@
+apiVersion: v2
+name: cluster-info
+description: Writes down which cluster this is
+version: 0.1.0
