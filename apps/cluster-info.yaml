@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-info
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            profile.core: "on"
+  template:
+    metadata:
+      name: "cluster-info-{{.name}}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/mjbrian/platform-gitops.git
+        targetRevision: main
+        path: charts/cluster-info
+        helm:
+          valuesObject:
+            clusterName: "{{.name}}"
+            environment: '{{index .metadata.labels "environment"}}'
+      destination:
+        server: "{{.server}}"
+        namespace: platform-info
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
