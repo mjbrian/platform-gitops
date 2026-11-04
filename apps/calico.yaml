@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: calico
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            profile.core: "on"
+  template:
+    metadata:
+      name: "calico-{{.name}}"
+      annotations:
+        argocd.argoproj.io/compare-options: ServerSideDiff=true
+    spec:
+      project: default
+      sources:
+        - repoURL: https://docs.tigera.io/calico/charts
+          chart: tigera-operator
+          targetRevision: v3.31.4
+          helm:
+            releaseName: calico
+            valueFiles:
+              - $infra/k8s/platform/calico/values.yaml
+        - repoURL: https://github.com/mjbrian/platform-infra.git
+          targetRevision: main
+          ref: infra
+      destination:
+        server: "{{.server}}"
+        namespace: tigera-operator
+      syncPolicy:
+        automated:
+          prune: false
+          selfHeal: true
+        syncOptions:
+          - ServerSideApply=true
+        retry:
+          limit: 10
+          backoff:
+            duration: 30s
+            factor: 2
+            maxDuration: 5m
